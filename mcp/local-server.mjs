@@ -97,7 +97,7 @@ const outputSchema = z.object({
 const instructions = `
 这是本机中文对话导航服务。
 
-用户说“开启对话导航”后，在当前对话的每次实质回答末尾追加一个紧凑的“下一步”区域。读取最近一次 ui/update-model-context 提供的 navigationPreference，并把 personality 与 optionCount 传给工具；没有偏好时使用 rational 和 3。生成数量必须与 optionCount 完全一致，任务意图必须延续当前目标并避免重复已完成内容。
+当 Codex 的对话导航 Stop Hook 已启用时，在当前任务的回答末尾追加一个紧凑的“下一步”区域。读取最近一次 ui/update-model-context 提供的 navigationPreference，并把 personality 与 optionCount 传给工具；没有偏好时使用 rational 和 3。生成数量必须与 optionCount 完全一致，任务意图必须延续当前目标并避免重复已完成内容。
 
 personality="brainstorm" 时扩大联想、提供大胆且彼此不同的创作方向；personality="rational" 时优先证据、约束、风险、取舍和验证；personality="empathic" 时优先受众感受、语气、美学、感官细节和情绪共鸣，同时保持任务可执行。这是下一步建议的生成策略，不代表修改底层模型 temperature。
 
@@ -107,7 +107,7 @@ personality="brainstorm" 时扩大联想、提供大胆且彼此不同的创作�
 
 工具中的每条 prompt 必须是 40–300 字、可直接交给 Agent 执行的完整中文任务：交代当前目标或已完成进度、一个具体下一步动作，以及期望的交付物、决策或验证结果。与开发和多轮 Agent 工作相关时，保留必要的范围、文件、约束、未决风险和测试要求。避免“继续优化”“详细说明”“下一步怎么做”等空泛表达。
 
-用户说“关闭对话导航”后停止追加建议。简单确认、拒绝、纯状态通知或已经彻底结束的任务可以不显示。
+自动追加的启用与停用由 Codex 的全局 /hooks 设置控制；普通对话文字无法修改 Hook 状态。
 `.trim();
 
 const toolDescription = `

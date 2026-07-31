@@ -1,6 +1,6 @@
 {
   "name": "conversation-navigator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "在每轮回答完成后提供可选择、可编辑、可发送的中文下一步建议。",
   "author": {
     "name": "xuhuawork",

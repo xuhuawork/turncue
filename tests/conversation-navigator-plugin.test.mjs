@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
@@ -23,6 +23,7 @@ test("plugin package uses portable MCP and Hook paths", async () => {
 
   assert.equal(manifest.name, "conversation-navigator");
   assert.equal(manifest.mcpServers, "./.mcp.json");
+  assert.deepEqual(Object.keys(hooks), ["hooks"]);
   assert.equal(mcp.mcpServers["conversation-navigator"].cwd, ".");
   assert.deepEqual(mcp.mcpServers["conversation-navigator"].args, [
     "./mcp/server.mjs",
@@ -35,7 +36,20 @@ test("plugin package uses portable MCP and Hook paths", async () => {
 });
 
 test("plugin build keeps Widget and Hook synchronized", async () => {
-  const [sourceWidget, pluginWidget, sourceHook, pluginHook] = await Promise.all([
+  const [
+    sourceWidget,
+    pluginWidget,
+    sourceHook,
+    pluginHook,
+    sourceReadme,
+    pluginReadme,
+    sourceLicense,
+    pluginLicense,
+    sourceSecurity,
+    pluginSecurity,
+    sourceNotices,
+    pluginNotices,
+  ] = await Promise.all([
     readFile(new URL("../mcp/prompt-guide-widget.html", import.meta.url), "utf8"),
     readFile(new URL("mcp/prompt-guide-widget.html", pluginRoot), "utf8"),
     readFile(
@@ -46,10 +60,28 @@ test("plugin build keeps Widget and Hook synchronized", async () => {
       new URL("scripts/auto-navigation-stop-hook.mjs", pluginRoot),
       "utf8",
     ),
+    readFile(new URL("../README.md", import.meta.url), "utf8"),
+    readFile(new URL("README.md", pluginRoot), "utf8"),
+    readFile(new URL("../LICENSE", import.meta.url), "utf8"),
+    readFile(new URL("LICENSE", pluginRoot), "utf8"),
+    readFile(new URL("../SECURITY.md", import.meta.url), "utf8"),
+    readFile(new URL("SECURITY.md", pluginRoot), "utf8"),
+    readFile(new URL("../THIRD_PARTY_NOTICES.md", import.meta.url), "utf8"),
+    readFile(new URL("THIRD_PARTY_NOTICES.md", pluginRoot), "utf8"),
   ]);
 
   assert.equal(pluginWidget, sourceWidget);
   assert.equal(pluginHook, sourceHook);
+  assert.equal(pluginReadme, sourceReadme);
+  assert.equal(pluginLicense, sourceLicense);
+  assert.equal(pluginSecurity, sourceSecurity);
+  assert.equal(pluginNotices, sourceNotices);
+
+  const runtimeLicenses = await readdir(
+    new URL("licenses/runtime/", pluginRoot),
+  );
+  assert.ok(runtimeLicenses.includes("DEPENDENCIES.md"));
+  assert.ok(runtimeLicenses.length >= 10);
 });
 
 test(
