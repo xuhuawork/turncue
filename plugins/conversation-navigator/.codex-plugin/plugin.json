@@ -1,7 +1,7 @@
 {
   "name": "conversation-navigator",
-  "version": "0.1.1",
-  "description": "在每轮回答完成后提供可选择、可编辑、可发送的中文下一步建议。",
+  "version": "0.2.0",
+  "description": "TurnCue 在每轮回答后提供可编辑的中英文下一步建议。 TurnCue adds editable Chinese or English next-step suggestions after each response.",
   "author": {
     "name": "xuhuawork",
     "url": "https://github.com/xuhuawork"
@@ -18,9 +18,9 @@
   ],
   "mcpServers": "./.mcp.json",
   "interface": {
-    "displayName": "对话导航",
-    "shortDescription": "用可编辑建议引导每一轮对话",
-    "longDescription": "安装并信任 Stop Hook 后，回答完成时自动追加中文下一步卡片。可切换创意脑暴、理性推演和感性共鸣三种导航性格，并选择 3–5 个后续方向；点击后可以编辑，再发送回当前对话。",
+    "displayName": "TurnCue",
+    "shortDescription": "可编辑的下一步建议 / Editable next-step prompts",
+    "longDescription": "TurnCue 在回答完成后自动追加下一步卡片。支持自动、中文和 English 三种语言设置，创意脑暴、理性推演和感性共鸣三种人格，以及每轮 3–5 个可编辑方向。 TurnCue adds a next-step card after each completed response, with Auto, Chinese, or English language modes, three navigation personalities, and 3–5 editable suggestions.",
     "developerName": "xuhuawork",
     "category": "Productivity",
     "capabilities": [
@@ -28,9 +28,9 @@
       "Write"
     ],
     "defaultPrompt": [
-      "开启对话导航，用理性推演模式提供 3 个下一步建议。",
-      "开启对话导航，用创意脑暴模式每轮提供 5 个不同方向。",
-      "开启对话导航，用感性共鸣模式提供 4 个关注受众感受的建议。"
+      "开启 TurnCue，用理性推演模式提供 3 个中文下一步建议。",
+      "Start TurnCue in Brainstorm mode with 5 distinct English directions.",
+      "开启 TurnCue 自动语言模式，用感性共鸣提供 4 个建议。"
     ],
     "brandColor": "#16875F",
     "composerIcon": "./assets/icon.svg",

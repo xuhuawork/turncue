@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
-    <title>对话导航</title>
+    <title>TurnCue · 对话导航</title>
     <style>
       :root {
         color-scheme: light;
@@ -1233,7 +1233,8 @@
         opacity: 1;
       }
 
-      .count-section {
+      .count-section,
+      .language-section {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
@@ -1241,6 +1242,10 @@
         margin-top: 9px;
         padding: 10px 2px 1px;
         border-top: 1px solid var(--line);
+      }
+
+      .language-section {
+        margin-top: 8px;
       }
 
       .count-copy {
@@ -1264,7 +1269,8 @@
         font-size: 10px;
       }
 
-      .count-options {
+      .count-options,
+      .language-options {
         display: grid;
         grid-template-columns: repeat(3, 44px);
         gap: 3px;
@@ -1277,7 +1283,8 @@
         );
       }
 
-      .count-option {
+      .count-option,
+      .language-option {
         min-width: 44px;
         min-height: 44px;
         padding: 0;
@@ -1296,7 +1303,8 @@
           color 150ms ease;
       }
 
-      .count-option:hover {
+      .count-option:hover,
+      .language-option:hover {
         background: color-mix(
           in srgb,
           var(--surface-strong) 86%,
@@ -1305,7 +1313,8 @@
         color: var(--text);
       }
 
-      .count-option[aria-pressed="true"] {
+      .count-option[aria-pressed="true"],
+      .language-option[aria-pressed="true"] {
         border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
         background: var(--surface-strong);
         box-shadow: 0 1px 4px rgba(18, 25, 21, 0.08);
@@ -1427,6 +1436,7 @@
       .preference-trigger:focus-visible,
       .personality-option:focus-visible,
       .count-option:focus-visible,
+      .language-option:focus-visible,
       .theme-option:focus-visible,
       .accent-option:focus-visible {
         outline: 3px solid color-mix(in srgb, var(--accent) 34%, transparent);
@@ -1825,8 +1835,8 @@
       <header class="header">
         <div class="header-title">
           <span class="pulse" aria-hidden="true"></span>
-          <h1 id="widget-title">下一步</h1>
-          <span id="mode-label">对话导航已开启</span>
+          <h1 id="widget-title">TurnCue</h1>
+          <span id="mode-label">让对话自然走向下一步</span>
         </div>
         <div class="header-meta">
           <p class="topic" id="topic" hidden></p>
@@ -1990,10 +2000,10 @@
               </div>
               <div class="count-section">
                 <div class="count-copy">
-                  <span class="count-label">每轮建议数量</span>
-                  <span class="count-help">下一次生成时应用</span>
+                  <span class="count-label" id="count-label">每轮建议数量</span>
+                  <span class="count-help" id="count-help">下一次生成时应用</span>
                 </div>
-                <div class="count-options" role="group" aria-label="建议数量">
+                <div class="count-options" id="count-options" role="group" aria-label="建议数量">
                   <button
                     class="count-option"
                     type="button"
@@ -2017,6 +2027,38 @@
                     aria-pressed="false"
                   >
                     5
+                  </button>
+                </div>
+              </div>
+              <div class="language-section">
+                <div class="count-copy">
+                  <span class="count-label" id="language-label">语言</span>
+                  <span class="count-help" id="language-help">界面立即切换 · 建议下轮生效</span>
+                </div>
+                <div class="language-options" id="language-options" role="group" aria-label="语言偏好">
+                  <button
+                    class="language-option"
+                    type="button"
+                    data-language="auto"
+                    aria-pressed="true"
+                  >
+                    自动
+                  </button>
+                  <button
+                    class="language-option"
+                    type="button"
+                    data-language="zh-CN"
+                    aria-pressed="false"
+                  >
+                    中文
+                  </button>
+                  <button
+                    class="language-option"
+                    type="button"
+                    data-language="en-US"
+                    aria-pressed="false"
+                  >
+                    EN
                   </button>
                 </div>
               </div>
@@ -2056,8 +2098,8 @@
               hidden
             >
               <section class="appearance-section">
-                <p class="appearance-label">主题</p>
-                <div class="theme-options" role="group" aria-label="主题模式">
+                <p class="appearance-label" id="theme-label">主题</p>
+                <div class="theme-options" id="theme-options" role="group" aria-label="主题模式">
                   <button
                     class="theme-option"
                     type="button"
@@ -2085,8 +2127,8 @@
                 </div>
               </section>
               <section class="appearance-section">
-                <p class="appearance-label">强调色</p>
-                <div class="accent-options" role="group" aria-label="强调色">
+                <p class="appearance-label" id="accent-label">强调色</p>
+                <div class="accent-options" id="accent-options" role="group" aria-label="强调色">
                   <button
                     class="accent-option"
                     type="button"
@@ -2186,51 +2228,196 @@
         const PROTOCOL_VERSION = "2026-01-26";
         const KIND_META = {
           deepen: {
-            label: "继续深入",
             iconPath:
               "m12 3-7.5 4.2L12 11.4l7.5-4.2L12 3Zm-7.5 9L12 16.2l7.5-4.2M4.5 16.8 12 21l7.5-4.2",
           },
           clarify: {
-            label: "补充信息",
             iconPath: "M4 5.5h16v12H9l-5 3v-15ZM9 11.5h6m-3-3v6",
           },
           act: {
-            label: "转为行动",
             iconPath: "M7 17 17 7M9 7h8v8",
           },
           alternative: {
-            label: "换个方向",
             iconPath:
               "M4 7h3c4.5 0 5.5 10 10 10h3m-3-3 3 3-3 3M4 17h3c2 0 3-2 4-4m3-4c1-1.4 1.8-2 3-2h3m-3-3 3 3-3 3",
           },
         };
+        const I18N = {
+          "zh-CN": {
+            documentTitle: "TurnCue · 对话导航",
+            subtitleInitial: "让对话自然走向下一步",
+            subtitleActive: "对话导航已开启",
+            subtitleUpdated: "下一步建议已更新",
+            preferenceTitle: "导航偏好",
+            preferenceNext: "下轮生效",
+            preferenceSyncing: "同步中…",
+            preferenceSynced: "已同步 · 下轮生效",
+            preferenceLocal: "已保存在本地 · 下轮生效",
+            preferencePreview: "本地预览 · 下轮生效",
+            preferenceAria: "导航偏好：{personality}，每轮 {count} 条建议",
+            personalityAria: "导航性格",
+            personalities: {
+              brainstorm: {
+                label: "创意脑暴",
+                short: "脑暴",
+                description: "发散联想，寻找意外角度与多条创作路径",
+                instruction: "发散联想，优先寻找意外角度、鲜明反差和多条彼此不同的创作路径",
+              },
+              rational: {
+                label: "理性推演",
+                short: "理性",
+                description: "拆解目标、约束和风险，给出可验证的推进",
+                instruction: "拆解目标、约束、证据和风险，给出结构清晰且可验证的推进路径",
+              },
+              empathic: {
+                label: "感性共鸣",
+                short: "感性",
+                description: "从情绪、受众与表达质感中寻找下一步",
+                instruction: "从情绪、受众感受、表达语气和审美质感中寻找具体的下一步",
+              },
+            },
+            countLabel: "每轮建议数量",
+            countHelp: "下一次生成时应用",
+            countAria: "建议数量",
+            languageLabel: "语言",
+            languageHelp: "界面立即切换 · 建议下轮生效",
+            languageAria: "语言偏好",
+            languages: { auto: "自动", "zh-CN": "中文", "en-US": "EN" },
+            appearanceOpen: "打开外观设置",
+            appearanceTitle: "外观设置",
+            themeLabel: "主题",
+            themeAria: "主题模式",
+            themes: { system: "自动", light: "浅色", dark: "深色" },
+            accentLabel: "强调色",
+            accentAria: "强调色",
+            accents: { emerald: "翡翠", blue: "蓝色", orange: "橙色", violet: "紫色" },
+            suggestionsAria: "下一步建议",
+            composerAria: "编辑并发送",
+            composerDefault: "编辑后发送",
+            placeholder: "选择上方建议，或直接写下你想继续说的话…",
+            clear: "清空",
+            send: "发送到对话",
+            sending: "发送中…",
+            empty: "正在等待 ChatGPT 生成下一步建议…",
+            kinds: { deepen: "继续深入", clarify: "补充信息", act: "转为行动", alternative: "换个方向" },
+            suggestionAria: "{kind}：{title}。单击编辑，双击直接发送",
+            suggestionTitle: "单击编辑，双击直接发送",
+            draftReady: "已填入草稿，可修改后发送。",
+            localPreviewError: "当前为本地预览模式",
+            timeout: "{method} 请求超时",
+            bridgeUnavailable: "主机桥接暂不可用；建议仍可编辑，发送功能需要在 ChatGPT 中使用。",
+            bridgeRejected: "主机拒绝了这条消息",
+            sendBridgeUnavailable: "当前环境没有可用的发送桥接",
+            choosePrompt: "请先选择建议或输入内容。",
+            sendingStatus: "正在发送到当前对话…",
+            sent: "已发送。",
+            sendFailed: "发送失败，请稍后重试。",
+            hostRequestFailed: "主机请求失败",
+            previewTopic: "本地预览",
+            previewStatus: "本地预览：可测试选择、编辑和双击发送。",
+            context: "TurnCue navigationPreference={json}。后续建议使用「{personality}」性格：{instruction}；每轮生成 {count} 条建议。{languageInstruction}",
+            languageInstructions: {
+              auto: "建议语言跟随当前对话。",
+              "zh-CN": "下一轮建议使用简体中文。",
+              "en-US": "下一轮建议使用英文。",
+            },
+          },
+          "en-US": {
+            documentTitle: "TurnCue · Conversation guide",
+            subtitleInitial: "Keep every conversation moving",
+            subtitleActive: "Conversation guidance is on",
+            subtitleUpdated: "Next steps updated",
+            preferenceTitle: "Guidance settings",
+            preferenceNext: "Applies next turn",
+            preferenceSyncing: "Syncing…",
+            preferenceSynced: "Synced · next turn",
+            preferenceLocal: "Saved here · next turn",
+            preferencePreview: "Local preview · next turn",
+            preferenceAria: "Guidance settings: {personality}, {count} suggestions per turn",
+            personalityAria: "Guidance personality",
+            personalities: {
+              brainstorm: {
+                label: "Brainstorm",
+                short: "Ideas",
+                description: "Explore unexpected angles and distinct creative paths",
+                instruction: "expand associations and prioritize surprising angles, strong contrasts, and clearly different creative paths",
+              },
+              rational: {
+                label: "Analytical",
+                short: "Logic",
+                description: "Weigh goals, constraints, risks, and verifiable actions",
+                instruction: "break down goals, constraints, evidence, and risks into a clear, testable path forward",
+              },
+              empathic: {
+                label: "Empathic",
+                short: "Empathy",
+                description: "Tune the next step for audience, emotion, and tone",
+                instruction: "shape a concrete next step around emotion, audience response, voice, and aesthetic quality",
+              },
+            },
+            countLabel: "Suggestions per turn",
+            countHelp: "Applied to the next generation",
+            countAria: "Suggestion count",
+            languageLabel: "Language",
+            languageHelp: "UI updates now · suggestions next turn",
+            languageAria: "Language preference",
+            languages: { auto: "Auto", "zh-CN": "中文", "en-US": "EN" },
+            appearanceOpen: "Open appearance settings",
+            appearanceTitle: "Appearance",
+            themeLabel: "Theme",
+            themeAria: "Theme mode",
+            themes: { system: "Auto", light: "Light", dark: "Dark" },
+            accentLabel: "Accent",
+            accentAria: "Accent color",
+            accents: { emerald: "Emerald", blue: "Blue", orange: "Orange", violet: "Violet" },
+            suggestionsAria: "Next-step suggestions",
+            composerAria: "Edit and send",
+            composerDefault: "Edit before sending",
+            placeholder: "Choose a suggestion above, or write what you want to say next…",
+            clear: "Clear",
+            send: "Send to chat",
+            sending: "Sending…",
+            empty: "Waiting for ChatGPT to generate next steps…",
+            kinds: { deepen: "Go deeper", clarify: "Add context", act: "Take action", alternative: "Try another angle" },
+            suggestionAria: "{kind}: {title}. Click to edit; double-click to send",
+            suggestionTitle: "Click to edit; double-click to send",
+            draftReady: "Draft filled. You can edit it before sending.",
+            localPreviewError: "This is local preview mode",
+            timeout: "{method} request timed out",
+            bridgeUnavailable: "The host bridge is unavailable. Suggestions remain editable; sending requires ChatGPT.",
+            bridgeRejected: "The host rejected this message",
+            sendBridgeUnavailable: "No supported message bridge is available",
+            choosePrompt: "Choose a suggestion or enter a message first.",
+            sendingStatus: "Sending to the current conversation…",
+            sent: "Sent.",
+            sendFailed: "Send failed. Please try again.",
+            hostRequestFailed: "Host request failed",
+            previewTopic: "Local preview",
+            previewStatus: "Local preview: test selecting, editing, and double-click sending.",
+            context: "TurnCue navigationPreference={json}. Use the {personality} guidance style: {instruction}; generate exactly {count} suggestions per turn. {languageInstruction}",
+            languageInstructions: {
+              auto: "Match the language of the current conversation.",
+              "zh-CN": "Generate the next suggestions in Simplified Chinese.",
+              "en-US": "Generate the next suggestions in English.",
+            },
+          },
+        };
         const THEME_CHOICES = new Set(["system", "light", "dark"]);
+        const LANGUAGE_CHOICES = new Set(["auto", "zh-CN", "en-US"]);
         const ACCENT_CHOICES = new Set([
           "emerald",
           "blue",
           "orange",
           "violet",
         ]);
-        const PERSONALITY_META = {
-          brainstorm: {
-            label: "创意脑暴",
-            instruction:
-              "发散联想，优先寻找意外角度、鲜明反差和多条彼此不同的创作路径",
-          },
-          rational: {
-            label: "理性推演",
-            instruction:
-              "拆解目标、约束、证据和风险，给出结构清晰且可验证的推进路径",
-          },
-          empathic: {
-            label: "感性共鸣",
-            instruction:
-              "从情绪、受众感受、表达语气和审美质感中寻找具体的下一步",
-          },
-        };
-        const PERSONALITY_CHOICES = new Set(Object.keys(PERSONALITY_META));
+        const PERSONALITY_CHOICES = new Set([
+          "brainstorm",
+          "rational",
+          "empathic",
+        ]);
         const OPTION_COUNTS = new Set([3, 4, 5]);
         const els = {
+          widgetTitle: document.getElementById("widget-title"),
           suggestions: document.getElementById("suggestions"),
           composer: document.getElementById("composer"),
           draft: document.getElementById("draft"),
@@ -2244,16 +2431,31 @@
           preference: document.querySelector(".preference"),
           preferenceTrigger: document.getElementById("preference-trigger"),
           preferencePanel: document.getElementById("preference-panel"),
+          preferenceTitle: document.getElementById("preference-title"),
           preferenceSummary: document.getElementById("preference-summary"),
           preferenceFeedback: document.getElementById("preference-feedback"),
+          personalityGroup: document.querySelector(".personality-options"),
           personalityOptions: Array.from(
             document.querySelectorAll(".personality-option"),
           ),
+          countLabel: document.getElementById("count-label"),
+          countHelp: document.getElementById("count-help"),
+          countGroup: document.getElementById("count-options"),
           countOptions: Array.from(document.querySelectorAll(".count-option")),
+          languageLabel: document.getElementById("language-label"),
+          languageHelp: document.getElementById("language-help"),
+          languageGroup: document.getElementById("language-options"),
+          languageOptions: Array.from(
+            document.querySelectorAll(".language-option"),
+          ),
           appearance: document.querySelector(".appearance"),
           appearanceTrigger: document.getElementById("appearance-trigger"),
           appearancePanel: document.getElementById("appearance-panel"),
+          themeLabel: document.getElementById("theme-label"),
+          themeGroup: document.getElementById("theme-options"),
           themeOptions: Array.from(document.querySelectorAll(".theme-option")),
+          accentLabel: document.getElementById("accent-label"),
+          accentGroup: document.getElementById("accent-options"),
           accentOptions: Array.from(document.querySelectorAll(".accent-option")),
         };
         const pending = new Map();
@@ -2268,8 +2470,14 @@
         let accentPreference = "emerald";
         let personalityPreference = "rational";
         let optionCountPreference = 3;
+        let languagePreference = "auto";
+        let activeUiLocale = "zh-CN";
         let hostTheme = null;
+        let hostLocale = null;
         let hostCapabilities = {};
+        let modeTranslationKey = "subtitleInitial";
+        let preferenceFeedbackKey = "preferenceNext";
+        let statusTranslation = null;
         let preferenceDirty = false;
         let preferenceSyncSequence = 0;
         let latestPreferenceSync = Promise.resolve();
@@ -2282,9 +2490,109 @@
           }
         }
 
+        function t(path, values = {}) {
+          const parts = path.split(".");
+          let value = I18N[activeUiLocale];
+          for (const part of parts) value = value && value[part];
+          if (typeof value !== "string") return path;
+          return value.replace(/\{([^}]+)\}/g, (_, key) =>
+            Object.prototype.hasOwnProperty.call(values, key)
+              ? String(values[key])
+              : `{${key}}`,
+          );
+        }
+
         function setStatus(message, tone) {
+          statusTranslation = null;
           els.status.textContent = message || "";
           els.status.dataset.tone = tone || "neutral";
+        }
+
+        function setStatusKey(key, tone, values) {
+          statusTranslation = { key, values: values || {} };
+          els.status.textContent = t(key, values);
+          els.status.dataset.tone = tone || "neutral";
+        }
+
+        function localizedError(key, values) {
+          const error = new Error(t(key, values));
+          error.translationKey = key;
+          error.translationValues = values || {};
+          return error;
+        }
+
+        function normalizeLocale(locale) {
+          const value = String(locale || "").toLowerCase();
+          if (value.startsWith("zh")) return "zh-CN";
+          if (value.startsWith("en")) return "en-US";
+          return null;
+        }
+
+        function normalizeLanguage(language) {
+          return LANGUAGE_CHOICES.has(language) ? language : "auto";
+        }
+
+        function resolveUiLocale() {
+          if (languagePreference !== "auto") return languagePreference;
+          return (
+            normalizeLocale(hostLocale) ||
+            normalizeLocale(navigator.language) ||
+            normalizeLocale(output && output.locale) ||
+            "zh-CN"
+          );
+        }
+
+        function applyTranslations() {
+          activeUiLocale = resolveUiLocale();
+          document.documentElement.lang = activeUiLocale;
+          document.title = t("documentTitle");
+          els.widgetTitle.textContent = "TurnCue";
+          els.mode.textContent = t(modeTranslationKey);
+          els.preferenceTitle.textContent = t("preferenceTitle");
+          els.personalityGroup.setAttribute("aria-label", t("personalityAria"));
+          for (const button of els.personalityOptions) {
+            const meta = I18N[activeUiLocale].personalities[button.dataset.personality];
+            button.querySelector(".personality-name").textContent = meta.label;
+            button.querySelector(".personality-description").textContent = meta.description;
+          }
+          els.countLabel.textContent = t("countLabel");
+          els.countHelp.textContent = t("countHelp");
+          els.countGroup.setAttribute("aria-label", t("countAria"));
+          els.languageLabel.textContent = t("languageLabel");
+          els.languageHelp.textContent = t("languageHelp");
+          els.languageGroup.setAttribute("aria-label", t("languageAria"));
+          for (const button of els.languageOptions) {
+            button.textContent = I18N[activeUiLocale].languages[button.dataset.language];
+          }
+          els.appearanceTrigger.setAttribute("aria-label", t("appearanceOpen"));
+          els.appearanceTrigger.title = t("appearanceTitle");
+          els.appearancePanel.setAttribute("aria-label", t("appearanceTitle"));
+          els.themeLabel.textContent = t("themeLabel");
+          els.themeGroup.setAttribute("aria-label", t("themeAria"));
+          for (const button of els.themeOptions) {
+            button.textContent = I18N[activeUiLocale].themes[button.dataset.themeChoice];
+          }
+          els.accentLabel.textContent = t("accentLabel");
+          els.accentGroup.setAttribute("aria-label", t("accentAria"));
+          for (const button of els.accentOptions) {
+            const swatch = button.querySelector(".accent-swatch");
+            button.replaceChildren(
+              swatch,
+              document.createTextNode(` ${I18N[activeUiLocale].accents[button.dataset.accentChoice]}`),
+            );
+          }
+          els.suggestions.setAttribute("aria-label", t("suggestionsAria"));
+          els.composer.setAttribute("aria-label", t("composerAria"));
+          els.draft.placeholder = t("placeholder");
+          els.clear.textContent = t("clear");
+          els.send.textContent = t(sending ? "sending" : "send");
+          if (!selectedId) els.composerContext.textContent = t("composerDefault");
+          if (statusTranslation) {
+            els.status.textContent = t(statusTranslation.key, statusTranslation.values);
+          }
+          setPreferenceFeedback(preferenceFeedbackKey, els.preferenceFeedback.dataset.tone);
+          updatePreferenceControls();
+          renderSuggestions();
         }
 
         function normalizePersonality(personality) {
@@ -2299,11 +2607,14 @@
         }
 
         function updatePreferenceControls() {
-          const meta = PERSONALITY_META[personalityPreference];
-          els.preferenceSummary.textContent = `${meta.label} · ${optionCountPreference}`;
+          const meta = I18N[activeUiLocale].personalities[personalityPreference];
+          els.preferenceSummary.textContent = `${meta.short} · ${optionCountPreference}`;
           els.preferenceTrigger.setAttribute(
             "aria-label",
-            `导航偏好：${meta.label}，每轮 ${optionCountPreference} 条建议`,
+            t("preferenceAria", {
+              personality: meta.label,
+              count: optionCountPreference,
+            }),
           );
 
           for (const button of els.personalityOptions) {
@@ -2320,25 +2631,60 @@
               ),
             );
           }
+          for (const button of els.languageOptions) {
+            button.setAttribute(
+              "aria-pressed",
+              String(button.dataset.language === languagePreference),
+            );
+          }
         }
 
-        function setPreferenceFeedback(message, tone) {
-          els.preferenceFeedback.textContent = message || "下轮生效";
+        function setPreferenceFeedback(key, tone) {
+          preferenceFeedbackKey = key || "preferenceNext";
+          els.preferenceFeedback.textContent = t(preferenceFeedbackKey);
           els.preferenceFeedback.dataset.tone = tone || "synced";
         }
 
-        function preferenceContextText(personality, optionCount) {
-          const meta = PERSONALITY_META[personality];
-          return `对话导航设置：后续建议使用「${meta.label}」性格，${meta.instruction}；每轮生成 ${optionCount} 条建议。`;
+        function preferenceContextText(snapshot) {
+          const meta = I18N[activeUiLocale].personalities[snapshot.personality];
+          return t("context", {
+            json: JSON.stringify({
+              personality: snapshot.personality,
+              optionCount: snapshot.optionCount,
+              language: snapshot.language,
+            }),
+            personality: meta.label,
+            instruction: meta.instruction,
+            count: snapshot.optionCount,
+            languageInstruction:
+              I18N[activeUiLocale].languageInstructions[snapshot.language],
+          });
+        }
+
+        function persistNavigationPreference() {
+          const api = openaiApi();
+          if (!api || typeof api.setWidgetState !== "function") return;
+          const current =
+            api.widgetState && typeof api.widgetState === "object"
+              ? api.widgetState
+              : {};
+          api.setWidgetState({
+            ...current,
+            navigationPreference: {
+              personality: personalityPreference,
+              optionCount: optionCountPreference,
+              language: languagePreference,
+            },
+          });
         }
 
         async function performPreferenceSync(snapshot, sequence) {
           if (!bridgeReady || !hostCapabilities.updateModelContext) {
-            setPreferenceFeedback("下轮生效", "local");
+            setPreferenceFeedback("preferenceNext", "local");
             return;
           }
 
-          setPreferenceFeedback("同步中…", "syncing");
+          setPreferenceFeedback("preferenceSyncing", "syncing");
           try {
             await rpcRequest(
               "ui/update-model-context",
@@ -2346,10 +2692,7 @@
                 content: [
                   {
                     type: "text",
-                    text: preferenceContextText(
-                      snapshot.personality,
-                      snapshot.optionCount,
-                    ),
+                    text: preferenceContextText(snapshot),
                   },
                 ],
               },
@@ -2357,11 +2700,11 @@
             );
             if (sequence === preferenceSyncSequence) {
               preferenceDirty = false;
-              setPreferenceFeedback("已同步 · 下轮生效");
+              setPreferenceFeedback("preferenceSynced");
             }
           } catch {
             if (sequence === preferenceSyncSequence) {
-              setPreferenceFeedback("已保存在本地 · 下轮生效", "local");
+              setPreferenceFeedback("preferenceLocal", "local");
             }
           }
         }
@@ -2372,6 +2715,7 @@
           const snapshot = {
             personality: personalityPreference,
             optionCount: optionCountPreference,
+            language: languagePreference,
           };
           latestPreferenceSync = latestPreferenceSync
             .catch(() => undefined)
@@ -2383,6 +2727,14 @@
           personalityPreference = normalizePersonality(personality);
           optionCountPreference = normalizeOptionCount(optionCount);
           updatePreferenceControls();
+          persistNavigationPreference();
+          if (sync) queuePreferenceSync();
+        }
+
+        function setLanguagePreference(language, sync) {
+          languagePreference = normalizeLanguage(language);
+          applyTranslations();
+          persistNavigationPreference();
           if (sync) queuePreferenceSync();
         }
 
@@ -2456,7 +2808,11 @@
             }
           }
           if (globals.locale) {
-            document.documentElement.lang = String(globals.locale);
+            const nextHostLocale = normalizeLocale(globals.locale);
+            if (nextHostLocale && nextHostLocale !== hostLocale) {
+              hostLocale = nextHostLocale;
+              if (languagePreference === "auto") applyTranslations();
+            }
           }
         }
 
@@ -2498,6 +2854,9 @@
           const optionCount = OPTION_COUNTS.has(Number(candidate.optionCount))
             ? Number(candidate.optionCount)
             : suggestions.length;
+          const language = LANGUAGE_CHOICES.has(candidate.language)
+            ? candidate.language
+            : null;
 
           return {
             version: candidate.version,
@@ -2508,6 +2867,7 @@
             mode: candidate.mode === "update" ? "update" : "activate",
             personality,
             optionCount,
+            language,
             suggestions,
           };
         }
@@ -2530,13 +2890,14 @@
           if (!output) {
             const empty = document.createElement("div");
             empty.className = "empty";
-            empty.textContent = "正在等待 ChatGPT 生成下一步建议…";
+            empty.textContent = t("empty");
             els.suggestions.appendChild(empty);
             return;
           }
 
           for (const suggestion of output.suggestions) {
             const meta = KIND_META[suggestion.kind];
+            const kindLabel = I18N[activeUiLocale].kinds[suggestion.kind];
             const button = document.createElement("button");
             const icon = document.createElement("span");
             const copy = document.createElement("span");
@@ -2560,16 +2921,19 @@
             );
             button.setAttribute(
               "aria-label",
-              `${meta.label}：${suggestion.title}。单击编辑，双击直接发送`,
+              t("suggestionAria", {
+                kind: kindLabel,
+                title: suggestion.title,
+              }),
             );
-            button.title = "单击编辑，双击直接发送";
+            button.title = t("suggestionTitle");
             icon.className = "kind-icon";
             icon.setAttribute("aria-hidden", "true");
             icon.appendChild(createKindGlyph(meta));
             copy.className = "suggestion-copy";
             heading.className = "suggestion-heading";
             kind.className = "kind-label";
-            kind.textContent = meta.label;
+            kind.textContent = kindLabel;
             title.className = "suggestion-title";
             title.textContent = suggestion.title;
             preview.className = "suggestion-preview";
@@ -2602,7 +2966,7 @@
           setComposerOpen(true);
           updateCounter();
           renderSuggestions();
-          setStatus("已填入草稿，可修改后发送。");
+          setStatusKey("draftReady");
           els.draft.focus();
           els.draft.setSelectionRange(
             els.draft.value.length,
@@ -2622,11 +2986,13 @@
             parsed.optionCount,
             false,
           );
-          document.documentElement.lang = parsed.locale;
-          els.mode.textContent =
+          if (parsed.language) {
+            setLanguagePreference(parsed.language, false);
+          }
+          modeTranslationKey =
             isUpdate || parsed.mode === "update"
-              ? "建议已更新"
-              : "对话导航已开启";
+              ? "subtitleUpdated"
+              : "subtitleActive";
 
           if (parsed.topic) {
             els.topic.hidden = false;
@@ -2644,24 +3010,24 @@
             if (!selectedExists) {
               selectedId = null;
               els.draft.value = "";
-              els.composerContext.textContent = "编辑后发送";
+              els.composerContext.textContent = t("composerDefault");
               setComposerOpen(false);
             }
           } else {
             selectedId = null;
             els.draft.value = "";
-            els.composerContext.textContent = "编辑后发送";
+            els.composerContext.textContent = t("composerDefault");
             setComposerOpen(false);
           }
 
           updateCounter();
-          renderSuggestions();
+          applyTranslations();
           return true;
         }
 
         function post(message) {
           if (window.parent === window) {
-            throw new Error("当前为本地预览模式");
+            throw localizedError("localPreviewError");
           }
           window.parent.postMessage(message, "*");
         }
@@ -2671,7 +3037,7 @@
           return new Promise((resolve, reject) => {
             const timeout = window.setTimeout(() => {
               pending.delete(id);
-              reject(new Error(`${method} 请求超时`));
+              reject(localizedError("timeout", { method }));
             }, timeoutMs);
             pending.set(id, { resolve, reject, timeout });
 
@@ -2701,7 +3067,7 @@
               "ui/initialize",
               {
                 appInfo: {
-                  name: "chatgpt-prompt-guide-widget",
+                  name: "TurnCue",
                   version: "1.0.0",
                 },
                 appCapabilities: {},
@@ -2724,10 +3090,7 @@
           } catch {
             hostCapabilities = {};
             if (!openaiApi()) {
-              setStatus(
-                "主机桥接暂不可用；建议仍可编辑，发送功能需要在 ChatGPT 中使用。",
-                "error",
-              );
+              setStatusKey("bridgeUnavailable", "error");
             }
           }
         }
@@ -2755,14 +3118,14 @@
           });
 
           if (result && result.isError) {
-            throw new Error("主机拒绝了这条消息");
+            throw localizedError("bridgeRejected");
           }
         }
 
         async function sendWithOpenAI(prompt) {
           const api = openaiApi();
           if (!api || typeof api.sendFollowUpMessage !== "function") {
-            throw new Error("当前环境没有可用的发送桥接");
+            throw localizedError("sendBridgeUnavailable");
           }
           await api.sendFollowUpMessage({
             prompt,
@@ -2774,15 +3137,15 @@
           if (sending) return;
           const prompt = els.draft.value;
           if (!prompt.trim()) {
-            setStatus("请先选择建议或输入内容。", "error");
+            setStatusKey("choosePrompt", "error");
             els.draft.focus();
             return;
           }
 
           sending = true;
           els.send.disabled = true;
-          els.send.textContent = "发送中…";
-          setStatus("正在发送到当前对话…");
+          els.send.textContent = t("sending");
+          setStatusKey("sendingStatus");
 
           try {
             await latestPreferenceSync.catch(() => undefined);
@@ -2798,26 +3161,34 @@
 
             selectedId = null;
             els.draft.value = "";
-            els.composerContext.textContent = "编辑后发送";
+            els.composerContext.textContent = t("composerDefault");
             setComposerOpen(false);
             updateCounter();
             renderSuggestions();
-            setStatus("已发送。");
+            setStatusKey("sent");
           } catch (error) {
-            const message =
-              error instanceof Error ? error.message : "发送失败，请稍后重试。";
-            setStatus(message, "error");
+            if (error && error.translationKey) {
+              setStatusKey(
+                error.translationKey,
+                "error",
+                error.translationValues,
+              );
+            } else if (error instanceof Error) {
+              setStatus(error.message, "error");
+            } else {
+              setStatusKey("sendFailed", "error");
+            }
           } finally {
             sending = false;
             els.send.disabled = false;
-            els.send.textContent = "发送到对话";
+            els.send.textContent = t("send");
           }
         }
 
         function clearDraft() {
           selectedId = null;
           els.draft.value = "";
-          els.composerContext.textContent = "编辑后发送";
+          els.composerContext.textContent = t("composerDefault");
           setComposerOpen(false);
           updateCounter();
           renderSuggestions();
@@ -2838,7 +3209,7 @@
             window.clearTimeout(request.timeout);
             if (message.error) {
               request.reject(
-                new Error(message.error.message || "主机请求失败"),
+                new Error(message.error.message || t("hostRequestFailed")),
               );
             } else {
               request.resolve(message.result);
@@ -2858,6 +3229,18 @@
           const api = openaiApi();
           if (api) {
             applyHostGlobals(api);
+            const savedPreference =
+              api.widgetState &&
+              typeof api.widgetState === "object" &&
+              api.widgetState.navigationPreference;
+            if (savedPreference && typeof savedPreference === "object") {
+              setNavigationPreference(
+                savedPreference.personality,
+                savedPreference.optionCount,
+                false,
+              );
+              setLanguagePreference(savedPreference.language, false);
+            }
             if (applyOutput(api.toolOutput)) return;
           }
 
@@ -2865,13 +3248,54 @@
             const previewParams = new URLSearchParams(window.location.search);
             setThemePreference(previewParams.get("theme") || "system");
             setAccentPreference(previewParams.get("accent") || "emerald");
+            const previewLanguage = normalizeLanguage(
+              previewParams.get("lang") || "auto",
+            );
+            setLanguagePreference(previewLanguage, false);
+            const previewLocale = activeUiLocale;
             const previewPersonality = normalizePersonality(
               previewParams.get("personality") || "rational",
             );
             const previewCount = normalizeOptionCount(
               previewParams.get("count") || 3,
             );
-            const previewSuggestions = [
+            const previewSuggestions = activeUiLocale === "en-US" ? [
+              {
+                id: "preview-deepen",
+                title: "Refine the auto-navigation rules",
+                prompt:
+                  "Review the current TurnCue Widget, its automatic continuation, tool description, and input schema. Add the context, actions, acceptance criteria, file list, and verification steps needed for reliable multi-turn Agent work.",
+                kind: "deepen",
+              },
+              {
+                id: "preview-act",
+                title: "Run the next local validation",
+                prompt:
+                  "Run the current build and tests, then design a three-turn Agent conversation check. Verify that every turn carries forward completed progress, proposes a concrete action, states the expected deliverable, and records failures with a repair path.",
+                kind: "act",
+              },
+              {
+                id: "preview-clarify",
+                title: "Confirm scope and completion criteria",
+                prompt:
+                  "Identify the missing information that could still reduce the accuracy of TurnCue suggestions, including target users, available Agent tools, execution permissions, and completion criteria. Ask in priority order and explain what each answer changes.",
+                kind: "clarify",
+              },
+              {
+                id: "preview-alternative",
+                title: "Compare an alternative path",
+                prompt:
+                  "Propose one alternative to the current Widget approach. Compare implementation complexity, interaction continuity, and model-call reliability, then state its best use case, key trade-offs, and smallest useful validation.",
+                kind: "alternative",
+              },
+              {
+                id: "preview-act-two",
+                title: "Create a release checklist",
+                prompt:
+                  "Turn the current conversation-navigation feature into an executable release checklist covering MCP resource discovery, preference sync, three-to-five suggestions, click-to-edit, double-click send, themes, mobile behavior, and a pass criterion for every item.",
+                kind: "act",
+              },
+            ] : [
               {
                 id: "preview-deepen",
                 title: "完善自动导航生成规则",
@@ -2910,15 +3334,16 @@
             ];
             applyOutput({
               version: "v1-preview",
-              locale: "zh-CN",
+              locale: previewLocale,
+              language: previewLanguage,
               mode: "activate",
-              topic: "本地预览",
+              topic: t("previewTopic"),
               personality: previewPersonality,
               optionCount: previewCount,
               suggestions: previewSuggestions.slice(0, previewCount),
             });
-            setPreferenceFeedback("本地预览 · 下轮生效", "local");
-            setStatus("本地预览：可测试选择、编辑和双击发送。");
+            setPreferenceFeedback("preferencePreview", "local");
+            setStatusKey("previewStatus");
           }
         }
 
@@ -2963,6 +3388,11 @@
             );
           });
         }
+        for (const button of els.languageOptions) {
+          button.addEventListener("click", () => {
+            setLanguagePreference(button.dataset.language, true);
+          });
+        }
         els.appearanceTrigger.addEventListener("click", () => {
           setAppearanceOpen(els.appearancePanel.hidden);
         });
@@ -3002,8 +3432,7 @@
         });
 
         updateAppearanceControls();
-        updatePreferenceControls();
-        renderSuggestions();
+        applyTranslations();
         updateCounter();
         loadInitialData();
         initializeBridge();

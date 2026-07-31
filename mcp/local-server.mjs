@@ -9,7 +9,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-const RESOURCE_URI = "ui://prompt-guide/widget-v15.html";
+const RESOURCE_URI = "ui://prompt-guide/widget-v16.html";
 const RESOURCE_URIS = [
   "ui://prompt-guide/widget-v1.html",
   "ui://prompt-guide/widget-v2.html",
@@ -25,6 +25,7 @@ const RESOURCE_URIS = [
   "ui://prompt-guide/widget-v12.html",
   "ui://prompt-guide/widget-v13.html",
   "ui://prompt-guide/widget-v14.html",
+  "ui://prompt-guide/widget-v15.html",
   RESOURCE_URI,
 ];
 const widgetHtml = await readFile(
@@ -46,6 +47,7 @@ const navigationPersonalitySchema = z.enum([
 ]);
 
 const navigationOptionCountSchema = z.number().int().min(3).max(5);
+const navigationLanguageSchema = z.enum(["auto", "zh-CN", "en-US"]);
 
 const inputSchema = z
   .object({
@@ -53,6 +55,11 @@ const inputSchema = z
     topic: z.string().trim().min(1).max(80).optional(),
     personality: navigationPersonalitySchema.optional(),
     optionCount: navigationOptionCountSchema.optional(),
+    language: navigationLanguageSchema
+      .optional()
+      .describe(
+        "TurnCue suggestion language: auto follows the latest substantive user request; zh-CN or en-US forces that language.",
+      ),
     suggestions: z
       .array(
         z.object({
@@ -72,18 +79,19 @@ const inputSchema = z
       context.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["suggestions"],
-        message: `suggestions 必须恰好包含 ${value.optionCount} 条`,
+        message: `suggestions must contain exactly ${value.optionCount} items / 必须恰好包含 ${value.optionCount} 条`,
       });
     }
   });
 
 const outputSchema = z.object({
   version: z.string(),
-  locale: z.string(),
+  locale: z.enum(["zh-CN", "en-US"]),
   mode: z.enum(["activate", "update"]),
   topic: z.string().optional(),
   personality: navigationPersonalitySchema,
   optionCount: navigationOptionCountSchema,
+  language: navigationLanguageSchema,
   suggestions: z.array(
     z.object({
       id: z.string(),
@@ -95,29 +103,31 @@ const outputSchema = z.object({
 });
 
 const instructions = `
-这是本机中文对话导航服务。
+TurnCue is a local bilingual conversation-navigation service / TurnCue 是本机双语对话导航服务。
 
-当 Codex 的对话导航 Stop Hook 已启用时，在当前任务的回答末尾追加一个紧凑的“下一步”区域。读取最近一次 ui/update-model-context 提供的 navigationPreference，并把 personality 与 optionCount 传给工具；没有偏好时使用 rational 和 3。生成数量必须与 optionCount 完全一致，任务意图必须延续当前目标并避免重复已完成内容。
+When the Codex Stop Hook requests an automatic refresh, call show_next_steps after the substantive answer. Read navigationPreference and pass personality, optionCount, and language. Defaults are personality="rational", optionCount=3, and language="auto". The number of suggestions must equal optionCount.
 
-personality="brainstorm" 时扩大联想、提供大胆且彼此不同的创作方向；personality="rational" 时优先证据、约束、风险、取舍和验证；personality="empathic" 时优先受众感受、语气、美学、感官细节和情绪共鸣，同时保持任务可执行。这是下一步建议的生成策略，不代表修改底层模型 temperature。
+Language policy / 语言规则：language="auto" follows the primary language of the latest substantive user request, ignoring Hook text, tool output, JSON, and status messages. language="zh-CN" forces Chinese titles and prompts. language="en-US" forces English titles and prompts. Keep every title and prompt in the selected language.
 
-3–4 条建议优先覆盖不同的 kind；5 条时允许最有价值的 kind 有意重复一次。用户在 Widget 修改偏好后，从下一次生成建议开始生效。
+personality="brainstorm" expands into bold, clearly different ideas; personality="rational" prioritizes evidence, constraints, risks, tradeoffs, and verification; personality="empathic" prioritizes audience feeling, tone, aesthetics, sensory detail, and emotional resonance while remaining executable. These strategies do not change the model temperature.
 
-当自动导航续回合明确要求调用 show_next_steps，或用户说“展开下一步”“显示建议卡片”“刷新下一步建议”时，调用本工具。首次显式展开使用 mode="activate"，后续刷新和自动导航使用 mode="update"。
+For 3–4 suggestions, prefer distinct kinds. With 5 suggestions, the most useful kind may repeat once. Widget preference changes apply to the next generation.
 
-工具中的每条 prompt 必须是 40–300 字、可直接交给 Agent 执行的完整中文任务：交代当前目标或已完成进度、一个具体下一步动作，以及期望的交付物、决策或验证结果。与开发和多轮 Agent 工作相关时，保留必要的范围、文件、约束、未决风险和测试要求。避免“继续优化”“详细说明”“下一步怎么做”等空泛表达。
+Call this tool when the automatic navigation turn requests it, or when the user asks to expand, display, or refresh next steps. Use mode="activate" for the first explicit display and mode="update" for later or automatic refreshes.
 
-自动追加的启用与停用由 Codex 的全局 /hooks 设置控制；普通对话文字无法修改 Hook 状态。
+Each prompt must be 40–300 characters and directly executable by an Agent. Include the current goal or completed progress, one concrete next action, and the expected deliverable, decision, or verification result. Preserve relevant scope, files, constraints, unresolved risks, and test requirements for development or multi-turn work. Avoid vague requests such as “continue optimizing” or “tell me more.”
+
+Automatic insertion is controlled by the global Codex /hooks setting / 自动追加由 Codex 的全局 /hooks 设置控制。
 `.trim();
 
 const toolDescription = `
-在当前对话中显示可选择、可编辑、可发送的中文下一步任务卡片。
+Use this when TurnCue should display selectable, editable, and sendable next-step cards in the current conversation / 用于在当前对话中显示可选择、可编辑、可发送的下一步卡片。
 
-用户明确要求显示卡片，或自动导航续回合要求刷新卡片时调用。建议由当前模型根据完整对话生成并作为参数传入。
+The current model generates suggestions from the full conversation and passes them as tool arguments. Call it for an explicit user request or an automatic navigation refresh.
 
-每条 title 用于快速辨认方向；每条 prompt 必须是 40–300 字、可以原样发送给 Agent 的完整任务，包含当前目标或进度、具体动作、期望输出或验证标准。多轮任务需要带上必要的范围、约束、文件、风险和测试要求，避免空泛建议。
+Each prompt must contain 40–300 characters and be a complete Agent-ready task with the current goal or progress, a concrete action, and an expected output or verification standard. Preserve necessary scope, constraints, files, risks, and tests for multi-turn work.
 
-读取模型上下文里的 navigationPreference；若存在，原样传入 personality 和 optionCount，并生成恰好 optionCount 条建议。若不存在，使用 personality="rational"、optionCount=3。三种 personality 的含义分别为创意脑暴、理性推演和感性共鸣。
+Read personality, optionCount, and language from navigationPreference. Defaults: rational, 3, auto. language="auto" follows the latest substantive user request; zh-CN or en-US forces all titles and prompts into that language / auto 跟随最近一次实质用户请求，手动语言值强制对应语言。
 `.trim();
 
 function stableHash(value) {
@@ -132,37 +142,63 @@ function stableHash(value) {
 }
 
 function normalizeLocale(value) {
-  if (typeof value !== "string") {
-    return "zh-CN";
+  if (typeof value === "string" && value.trim().toLowerCase().startsWith("en")) {
+    return "en-US";
   }
 
-  const locale = value.trim().slice(0, 35);
-  return /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(locale)
-    ? locale
-    : "zh-CN";
+  return "zh-CN";
 }
 
-function createOutput(input, locale) {
+function inferSuggestionLocale(suggestions) {
+  const content = suggestions
+    .map(({ title, prompt }) => `${title}\n${prompt}`)
+    .join("\n");
+  const hanCount = content.match(/\p{Script=Han}/gu)?.length ?? 0;
+  const latinCount = content.match(/[A-Za-z]/g)?.length ?? 0;
+
+  if (hanCount === 0 && latinCount === 0) {
+    return null;
+  }
+
+  return hanCount >= Math.max(1, Math.ceil(latinCount * 0.08))
+    ? "zh-CN"
+    : "en-US";
+}
+
+function resolveLocale(language, localeHint, suggestions) {
+  if (language === "zh-CN" || language === "en-US") {
+    return language;
+  }
+
+  return inferSuggestionLocale(suggestions) ?? normalizeLocale(localeHint);
+}
+
+function createOutput(input, localeHint) {
   const parsed = inputSchema.parse(input);
   const personality = parsed.personality ?? "rational";
   const optionCount = parsed.optionCount ?? parsed.suggestions.length;
+  const language = parsed.language ?? "auto";
+  const locale = resolveLocale(language, localeHint, parsed.suggestions);
   const normalized = {
     ...parsed,
     personality,
     optionCount,
+    language,
+    locale,
   };
   const payloadHash = stableHash(JSON.stringify(normalized));
 
   return {
     version: `v1-${payloadHash}`,
-    locale: normalizeLocale(locale),
+    locale,
     mode: parsed.mode,
     ...(parsed.topic ? { topic: parsed.topic } : {}),
     personality,
     optionCount,
+    language,
     suggestions: parsed.suggestions.map((suggestion, index) => ({
       id: `next-${stableHash(
-        `${index}:${suggestion.kind}:${suggestion.title}:${suggestion.prompt}`,
+        `${language}:${locale}:${index}:${suggestion.kind}:${suggestion.title}:${suggestion.prompt}`,
       )}`,
       ...suggestion,
     })),
@@ -172,7 +208,7 @@ function createOutput(input, locale) {
 const server = new McpServer(
   {
     name: "conversation-navigator",
-    version: "1.0.0",
+    version: "0.2.0",
   },
   {
     instructions,
@@ -183,7 +219,7 @@ registerAppTool(
   server,
   "show_next_steps",
   {
-    title: "显示中文下一步建议",
+    title: "TurnCue · Next steps / 下一步",
     description: toolDescription,
     inputSchema,
     outputSchema,
@@ -199,20 +235,24 @@ registerAppTool(
         visibility: ["model"],
       },
       "openai/outputTemplate": RESOURCE_URI,
-      "openai/toolInvocation/invoking": "正在整理下一步建议…",
-      "openai/toolInvocation/invoked": "下一步建议已更新",
+      "openai/toolInvocation/invoking": "TurnCue 正在准备 / Preparing…",
+      "openai/toolInvocation/invoked": "TurnCue 已更新 / Ready",
     },
   },
   async (input, extra) => {
-    const locale =
-      extra._meta?.locale ?? extra._meta?.["openai/locale"] ?? "zh-CN";
-    const output = createOutput(input, locale);
+    const localeHint =
+      extra._meta?.["openai/locale"] ?? extra._meta?.locale ?? "zh-CN";
+    const output = createOutput(input, localeHint);
+    const summary =
+      output.locale === "en-US"
+        ? `TurnCue generated ${output.suggestions.length} next-step suggestions in ${output.personality} mode.`
+        : `TurnCue 已按 ${output.personality} 模式生成 ${output.suggestions.length} 条下一步建议。`;
 
     return {
       content: [
         {
           type: "text",
-          text: `已按 ${output.personality} 模式生成 ${output.suggestions.length} 条中文下一步建议。`,
+          text: summary,
         },
       ],
       structuredContent: output,
@@ -225,11 +265,12 @@ for (const resourceUri of RESOURCE_URIS) {
 
   registerAppResource(
     server,
-    `中文对话导航 ${version}`,
+    `TurnCue ${version}`,
     resourceUri,
     {
-      title: "中文对话导航",
-      description: "选择建议，在内置编辑框中修改后发送到当前对话。",
+      title: "TurnCue",
+      description:
+        "Choose a next step, edit it, and send it to this conversation / 选择下一步，编辑后发送到当前对话。",
       _meta: {
         ui: {
           prefersBorder: true,
@@ -255,7 +296,7 @@ for (const resourceUri of RESOURCE_URIS) {
               },
             },
             "openai/widgetDescription":
-              "中文对话导航：选择下一步方向，在内置编辑框中修改后发送。",
+              "TurnCue: choose a next step, edit it, and send it / 选择下一步，编辑后发送。",
             "openai/widgetPrefersBorder": true,
             "openai/widgetCSP": {
               connect_domains: [],
