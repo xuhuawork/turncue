@@ -6,6 +6,8 @@ TurnCue 是面向 Codex 桌面 App 的本地对话导航插件。每次正文回
 
 公开品牌为 **TurnCue**。为了兼容现有安装、配置和自动化，插件、Marketplace 与 MCP 的技术 ID 继续使用 `conversation-navigator`。
 
+![TurnCue 中文界面：正文完成后出现三条下一步建议](./docs/images/turncue-widget-zh.jpg)
+
 ## 功能
 
 - 正文完成后再显示建议卡片。
@@ -95,6 +97,8 @@ codex plugin list --json
 7. 切回自动，在中英文请求之间切换，确认建议跟随最近一条实质请求。
 
 双击建议会立即发送，不会先停留在编辑框中。
+
+![TurnCue 中文编辑状态：建议可修改后发送](./docs/images/turncue-editor-zh.jpg)
 
 ## 使用
 

@@ -98,9 +98,17 @@ test("plugin build keeps Widget and Hook synchronized", async () => {
   assert.equal(pluginReadmeEnglish, sourceReadmeEnglish);
   assert.match(sourceReadme, /\[English\]\(\.\/README\.en\.md\)/);
   assert.match(sourceReadmeEnglish, /\[中文\]\(\.\/README\.md\)/);
+  assert.match(sourceReadme, /turncue-widget-zh\.jpg/);
+  assert.match(sourceReadmeEnglish, /turncue-widget-en\.jpg/);
   assert.equal(pluginLicense, sourceLicense);
   assert.equal(pluginSecurity, sourceSecurity);
   assert.equal(pluginNotices, sourceNotices);
+
+  const sourceImages = await readdir(
+    new URL("../docs/images/", import.meta.url),
+  );
+  const pluginImages = await readdir(new URL("docs/images/", pluginRoot));
+  assert.deepEqual(pluginImages.sort(), sourceImages.sort());
 
   const runtimeLicenses = await readdir(
     new URL("licenses/runtime/", pluginRoot),

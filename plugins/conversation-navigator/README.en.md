@@ -6,6 +6,8 @@ TurnCue is a local conversation-navigation plugin for the Codex desktop app. Aft
 
 The public product name is **TurnCue**. The plugin, Marketplace, and MCP technical IDs remain `conversation-navigator` so existing installations, configuration, and automation keep working.
 
+![TurnCue English interface showing three next-step suggestions after a completed response](./docs/images/turncue-widget-en.jpg)
+
 ## Features
 
 - Shows the suggestion card after the main answer completes.
@@ -95,6 +97,8 @@ Then start a new task and run this sequence:
 7. Return to Auto and alternate between Chinese and English requests. Confirm that suggestions follow the latest substantive request.
 
 Double-clicking a suggestion sends it immediately without first stopping in the editor.
+
+![TurnCue English editing state with an editable draft and send action](./docs/images/turncue-editor-en.jpg)
 
 ## Usage
 
