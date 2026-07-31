@@ -1,0 +1,9 @@
+node_modules/
+.gstack/
+.DS_Store
+.env
+.env.*
+coverage/
+dist/
+*.log
+*.zip

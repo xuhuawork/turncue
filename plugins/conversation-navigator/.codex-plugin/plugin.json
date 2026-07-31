@@ -1,0 +1,41 @@
+{
+  "name": "conversation-navigator",
+  "version": "0.1.0",
+  "description": "在每轮回答完成后提供可选择、可编辑、可发送的中文下一步建议。",
+  "author": {
+    "name": "xuhuawork",
+    "url": "https://github.com/xuhuawork"
+  },
+  "homepage": "https://github.com/xuhuawork/conversation-navigator#readme",
+  "repository": "https://github.com/xuhuawork/conversation-navigator",
+  "license": "MIT",
+  "keywords": [
+    "conversation",
+    "navigation",
+    "next-steps",
+    "mcp-app",
+    "widget"
+  ],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "对话导航",
+    "shortDescription": "用可编辑建议引导每一轮对话",
+    "longDescription": "安装并信任 Stop Hook 后，回答完成时自动追加中文下一步卡片。可切换创意脑暴、理性推演和感性共鸣三种导航性格，并选择 3–5 个后续方向；点击后可以编辑，再发送回当前对话。",
+    "developerName": "xuhuawork",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "开启对话导航，用理性推演模式提供 3 个下一步建议。",
+      "开启对话导航，用创意脑暴模式每轮提供 5 个不同方向。",
+      "开启对话导航，用感性共鸣模式提供 4 个关注受众感受的建议。"
+    ],
+    "brandColor": "#16875F",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/logo.svg",
+    "logoDark": "./assets/logo-dark.svg",
+    "websiteURL": "https://github.com/xuhuawork/conversation-navigator"
+  }
+}

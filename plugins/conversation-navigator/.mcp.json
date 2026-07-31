@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "conversation-navigator": {
+      "cwd": ".",
+      "command": "node",
+      "args": [
+        "./mcp/server.mjs"
+      ]
+    }
+  }
+}

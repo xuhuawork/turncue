@@ -1,0 +1,17 @@
+{
+  "description": "回答完成后自动追加一次中文下一步建议。",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${PLUGIN_ROOT}/scripts/auto-navigation-stop-hook.mjs\"",
+            "timeout": 5,
+            "statusMessage": "正在把下一步建议放到回答底部"
+          }
+        ]
+      }
+    ]
+  }
+}

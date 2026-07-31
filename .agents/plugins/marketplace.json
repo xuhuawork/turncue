@@ -1,0 +1,20 @@
+{
+  "name": "conversation-navigator",
+  "interface": {
+    "displayName": "Conversation Navigator"
+  },
+  "plugins": [
+    {
+      "name": "conversation-navigator",
+      "source": {
+        "source": "local",
+        "path": "./plugins/conversation-navigator"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

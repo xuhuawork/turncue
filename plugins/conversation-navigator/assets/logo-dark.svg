@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="对话导航">
+  <defs>
+    <linearGradient id="bg" x1="22" y1="16" x2="238" y2="242" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#18352C"/>
+      <stop offset="0.55" stop-color="#10231D"/>
+      <stop offset="1" stop-color="#08120F"/>
+    </linearGradient>
+    <pattern id="dots" width="18" height="18" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.4" fill="#78E8B5" opacity="0.22"/>
+    </pattern>
+  </defs>
+  <rect width="256" height="256" rx="64" fill="url(#bg)"/>
+  <rect width="256" height="256" rx="64" fill="url(#dots)"/>
+  <circle cx="193" cy="61" r="17" fill="#5BD6A5"/>
+  <circle cx="193" cy="61" r="28" fill="none" stroke="#5BD6A5" stroke-opacity="0.38" stroke-width="5"/>
+  <path d="M58 83h112M78 128h81M98 173h57" fill="none" stroke="#E8FFF4" stroke-width="20" stroke-linecap="round"/>
+</svg>

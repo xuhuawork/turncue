@@ -1,0 +1,27 @@
+{
+  "name": "conversation-navigator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Codex conversation navigation plugin with an MCP App Widget and Stop Hook.",
+  "license": "MIT",
+  "repository": "https://github.com/xuhuawork/conversation-navigator",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "build": "npm run build:plugin",
+    "build:plugin": "node scripts/build-conversation-navigator-plugin.mjs",
+    "lint": "node --check mcp/local-server.mjs && node --check scripts/auto-navigation-stop-hook.mjs && node --check scripts/build-conversation-navigator-plugin.mjs",
+    "test": "npm run build:plugin && node --test tests/*.test.mjs",
+    "validate": "npm run lint && npm test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/ext-apps": "^1.7.5",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1"
+  }
+}
