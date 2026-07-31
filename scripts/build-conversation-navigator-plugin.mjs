@@ -23,6 +23,7 @@ const pluginRoot = path.join(
 );
 const pluginMcpRoot = path.join(pluginRoot, "mcp");
 const pluginScriptsRoot = path.join(pluginRoot, "scripts");
+const pluginDocsImagesRoot = path.join(pluginRoot, "docs", "images");
 const pluginLicensesRoot = path.join(pluginRoot, "licenses");
 const runtimeLicensesRoot = path.join(pluginLicensesRoot, "runtime");
 const bundledServerPath = path.join(pluginMcpRoot, "server.mjs");
@@ -44,6 +45,10 @@ await Promise.all([
 
 await rm(pluginLicensesRoot, { recursive: true, force: true });
 await cp(path.join(repositoryRoot, "licenses"), pluginLicensesRoot, {
+  recursive: true,
+});
+await rm(pluginDocsImagesRoot, { recursive: true, force: true });
+await cp(path.join(repositoryRoot, "docs", "images"), pluginDocsImagesRoot, {
   recursive: true,
 });
 
