@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0 - 2026-07-31
+
+- Renamed the user-facing product to TurnCue while keeping `conversation-navigator` as the stable technical and installation ID.
+- Added automatic, Chinese, and English language modes for Widget controls and generated suggestions.
+- Added bilingual personality labels, starter prompts, installation guidance, upgrade guidance, and verification steps.
+- Advanced the Widget resource contract to `widget-v16.html` while preserving compatibility aliases for earlier resource URIs.
+- Added build and regression coverage for the English README, TurnCue branding, and bilingual plugin metadata.
+
 ## 0.1.1 - 2026-07-31
 
 - Kept the Hook manifest compatible with Codex CLI 0.140.0 so the Stop Hook can be loaded, reviewed, trusted, and enabled.

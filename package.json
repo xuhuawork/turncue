@@ -1,9 +1,9 @@
 {
   "name": "conversation-navigator",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "Codex conversation navigation plugin with an MCP App Widget and Stop Hook.",
+  "description": "TurnCue: a bilingual Codex conversation navigation plugin with an MCP App Widget and Stop Hook.",
   "license": "MIT",
   "repository": "https://github.com/xuhuawork/conversation-navigator",
   "engines": {

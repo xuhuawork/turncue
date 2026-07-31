@@ -53,6 +53,10 @@ await Promise.all([
     path.join(pluginRoot, "README.md"),
   ),
   copyFile(
+    path.join(repositoryRoot, "README.en.md"),
+    path.join(pluginRoot, "README.en.md"),
+  ),
+  copyFile(
     path.join(repositoryRoot, "LICENSE"),
     path.join(pluginRoot, "LICENSE"),
   ),
