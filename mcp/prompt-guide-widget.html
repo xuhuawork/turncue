@@ -2315,7 +2315,7 @@
             hostRequestFailed: "主机请求失败",
             previewTopic: "本地预览",
             previewStatus: "本地预览：可测试选择、编辑和双击发送。",
-            context: "TurnCue navigationPreference={json}。后续建议使用「{personality}」性格：{instruction}；每轮生成 {count} 条建议。{languageInstruction}",
+            context: "TurnCue state={json}。后续建议使用「{personality}」性格：{instruction}；每轮生成 {count} 条建议。{languageInstruction} navigationTask.status=\"in_progress\" 表示用户已发送当前任务；请先完成仍可执行的动作与验证，需要用户输入或授权时等待，真正闭环后再调用 show_next_steps。安全模式不会使用 Stop 续回合。",
             languageInstructions: {
               auto: "建议语言跟随当前对话。",
               "zh-CN": "下一轮建议使用简体中文。",
@@ -2394,7 +2394,7 @@
             hostRequestFailed: "Host request failed",
             previewTopic: "Local preview",
             previewStatus: "Local preview: test selecting, editing, and double-click sending.",
-            context: "TurnCue navigationPreference={json}. Use the {personality} guidance style: {instruction}; generate exactly {count} suggestions per turn. {languageInstruction}",
+            context: "TurnCue state={json}. Use the {personality} guidance style: {instruction}; generate exactly {count} suggestions per turn. {languageInstruction} navigationTask.status=\"in_progress\" means the user sent the active task. Finish every remaining executable action and verification first; wait when user input or authorization is required, and call show_next_steps only after genuine closure. Safe mode does not use a Stop continuation.",
             languageInstructions: {
               auto: "Match the language of the current conversation.",
               "zh-CN": "Generate the next suggestions in Simplified Chinese.",
@@ -2464,6 +2464,7 @@
         let sending = false;
         let output = null;
         let selectedId = null;
+        let navigationTask = null;
         let composerOpen = false;
         let resizeObserver = null;
         let themePreference = "system";
@@ -2645,13 +2646,16 @@
           els.preferenceFeedback.dataset.tone = tone || "synced";
         }
 
-        function preferenceContextText(snapshot) {
+        function preferenceContextText(snapshot, taskSnapshot) {
           const meta = I18N[activeUiLocale].personalities[snapshot.personality];
           return t("context", {
             json: JSON.stringify({
-              personality: snapshot.personality,
-              optionCount: snapshot.optionCount,
-              language: snapshot.language,
+              navigationPreference: {
+                personality: snapshot.personality,
+                optionCount: snapshot.optionCount,
+                language: snapshot.language,
+              },
+              navigationTask: taskSnapshot,
             }),
             personality: meta.label,
             instruction: meta.instruction,
@@ -2661,24 +2665,33 @@
           });
         }
 
-        function persistNavigationPreference() {
+        function persistWidgetState() {
           const api = openaiApi();
-          if (!api || typeof api.setWidgetState !== "function") return;
+          if (!api || typeof api.setWidgetState !== "function") {
+            return Promise.resolve();
+          }
           const current =
             api.widgetState && typeof api.widgetState === "object"
               ? api.widgetState
               : {};
-          api.setWidgetState({
-            ...current,
-            navigationPreference: {
-              personality: personalityPreference,
-              optionCount: optionCountPreference,
-              language: languagePreference,
-            },
-          });
+          return Promise.resolve(
+            api.setWidgetState({
+              ...current,
+              navigationPreference: {
+                personality: personalityPreference,
+                optionCount: optionCountPreference,
+                language: languagePreference,
+              },
+              navigationTask,
+            }),
+          ).catch(() => undefined);
         }
 
-        async function performPreferenceSync(snapshot, sequence) {
+        async function performPreferenceSync(
+          snapshot,
+          taskSnapshot,
+          sequence,
+        ) {
           if (!bridgeReady || !hostCapabilities.updateModelContext) {
             setPreferenceFeedback("preferenceNext", "local");
             return;
@@ -2692,7 +2705,7 @@
                 content: [
                   {
                     type: "text",
-                    text: preferenceContextText(snapshot),
+                    text: preferenceContextText(snapshot, taskSnapshot),
                   },
                 ],
               },
@@ -2717,24 +2730,69 @@
             optionCount: optionCountPreference,
             language: languagePreference,
           };
+          const taskSnapshot = navigationTask
+            ? { ...navigationTask }
+            : null;
           latestPreferenceSync = latestPreferenceSync
             .catch(() => undefined)
-            .then(() => performPreferenceSync(snapshot, sequence));
+            .then(() =>
+              performPreferenceSync(snapshot, taskSnapshot, sequence),
+            );
           return latestPreferenceSync;
+        }
+
+        function setNavigationTask(task, sync) {
+          navigationTask = task;
+          const persisted = persistWidgetState();
+          if (!sync) return persisted;
+          return Promise.all([persisted, queuePreferenceSync()]).then(
+            () => undefined,
+          );
+        }
+
+        async function markNavigationTaskInProgress(prompt) {
+          const suggestion = output?.suggestions.find(
+            (item) => item.id === selectedId,
+          );
+          const task = {
+            status: "in_progress",
+            selectedId: selectedId || "custom",
+            title: suggestion?.title || t("composerDefault"),
+            prompt: prompt.trim(),
+            version: output?.version || "unknown",
+          };
+          await setNavigationTask(task, true);
+          return task;
+        }
+
+        function markNavigationTaskCompleted(version) {
+          if (
+            navigationTask?.status !== "in_progress" ||
+            navigationTask.version === version
+          ) {
+            return;
+          }
+          void setNavigationTask(
+            {
+              status: "completed",
+              version,
+            },
+            true,
+          );
         }
 
         function setNavigationPreference(personality, optionCount, sync) {
           personalityPreference = normalizePersonality(personality);
           optionCountPreference = normalizeOptionCount(optionCount);
           updatePreferenceControls();
-          persistNavigationPreference();
+          persistWidgetState();
           if (sync) queuePreferenceSync();
         }
 
         function setLanguagePreference(language, sync) {
           languagePreference = normalizeLanguage(language);
           applyTranslations();
-          persistNavigationPreference();
+          persistWidgetState();
           if (sync) queuePreferenceSync();
         }
 
@@ -2989,6 +3047,9 @@
           if (parsed.language) {
             setLanguagePreference(parsed.language, false);
           }
+          if (parsed.mode === "update") {
+            markNavigationTaskCompleted(parsed.version);
+          }
           modeTranslationKey =
             isUpdate || parsed.mode === "update"
               ? "subtitleUpdated"
@@ -3146,9 +3207,15 @@
           els.send.disabled = true;
           els.send.textContent = t("sending");
           setStatusKey("sendingStatus");
+          const previousNavigationTask = navigationTask
+            ? { ...navigationTask }
+            : null;
+          let taskMarked = false;
 
           try {
             await latestPreferenceSync.catch(() => undefined);
+            await markNavigationTaskInProgress(prompt);
+            taskMarked = true;
             if (bridgeReady) {
               try {
                 await sendWithBridge(prompt);
@@ -3167,6 +3234,12 @@
             renderSuggestions();
             setStatusKey("sent");
           } catch (error) {
+            if (taskMarked) {
+              await setNavigationTask(
+                previousNavigationTask,
+                true,
+              ).catch(() => undefined);
+            }
             if (error && error.translationKey) {
               setStatusKey(
                 error.translationKey,
@@ -3240,6 +3313,13 @@
                 false,
               );
               setLanguagePreference(savedPreference.language, false);
+            }
+            const savedTask =
+              api.widgetState &&
+              typeof api.widgetState === "object" &&
+              api.widgetState.navigationTask;
+            if (savedTask && typeof savedTask === "object") {
+              void setNavigationTask({ ...savedTask }, false);
             }
             if (applyOutput(api.toolOutput)) return;
           }

@@ -1,14 +1,14 @@
 {
-  "name": "conversation-navigator",
+  "name": "turncue",
   "interface": {
     "displayName": "TurnCue"
   },
   "plugins": [
     {
-      "name": "conversation-navigator",
+      "name": "turncue",
       "source": {
         "source": "local",
-        "path": "./plugins/conversation-navigator"
+        "path": "./plugins/turncue"
       },
       "policy": {
         "installation": "AVAILABLE",

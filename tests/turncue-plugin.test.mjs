@@ -6,7 +6,7 @@ import test from "node:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
-const pluginRoot = new URL("../plugins/conversation-navigator/", import.meta.url);
+const pluginRoot = new URL("../plugins/turncue/", import.meta.url);
 const pluginServerPath = fileURLToPath(new URL("mcp/server.mjs", pluginRoot));
 
 test("plugin package uses portable MCP and Hook paths", async () => {
@@ -21,8 +21,8 @@ test("plugin package uses portable MCP and Hook paths", async () => {
   );
   const serialized = JSON.stringify({ manifest, mcp, hooks });
 
-  assert.equal(manifest.name, "conversation-navigator");
-  assert.equal(manifest.version, "0.2.0");
+  assert.equal(manifest.name, "turncue");
+  assert.equal(manifest.version, "0.4.0");
   assert.equal(manifest.interface.displayName, "TurnCue");
   assert.match(manifest.description, /TurnCue/);
   assert.match(manifest.description, /下一步建议/);
@@ -35,25 +35,29 @@ test("plugin package uses portable MCP and Hook paths", async () => {
   );
   assert.equal(manifest.mcpServers, "./.mcp.json");
   assert.deepEqual(Object.keys(hooks), ["hooks"]);
-  assert.equal(mcp.mcpServers["conversation-navigator"].cwd, ".");
-  assert.deepEqual(mcp.mcpServers["conversation-navigator"].args, [
+  assert.equal(mcp.mcpServers.turncue.cwd, ".");
+  assert.deepEqual(mcp.mcpServers.turncue.args, [
     "./mcp/server.mjs",
   ]);
+  assert.equal(Object.hasOwn(hooks.hooks, "Stop"), false);
+  assert.deepEqual(Object.keys(hooks.hooks), ["SessionStart"]);
   assert.match(
-    hooks.hooks.Stop[0].hooks[0].command,
-    /\$\{PLUGIN_ROOT\}\/scripts\/auto-navigation-stop-hook\.mjs/,
+    hooks.hooks.SessionStart[0].hooks[0].command,
+    /\$\{PLUGIN_ROOT\}\/scripts\/session-start-turncue\.mjs/,
   );
-  assert.match(hooks.hooks.Stop[0].hooks[0].statusMessage, /TurnCue/);
-  assert.match(hooks.hooks.Stop[0].hooks[0].statusMessage, /Preparing next steps/);
+  assert.equal(hooks.hooks.SessionStart[0].matcher, "startup|resume");
+  assert.doesNotMatch(serialized, /auto-navigation-stop-hook/);
   assert.doesNotMatch(serialized, /\/Users\//);
 });
 
-test("plugin build keeps Widget and Hook synchronized", async () => {
+test("plugin build keeps Widget and observer synchronized", async () => {
   const [
     sourceWidget,
     pluginWidget,
-    sourceHook,
-    pluginHook,
+    sourceSessionStart,
+    pluginSessionStart,
+    sourceObserver,
+    pluginObserver,
     sourceReadme,
     pluginReadme,
     sourceReadmeEnglish,
@@ -68,11 +72,19 @@ test("plugin build keeps Widget and Hook synchronized", async () => {
     readFile(new URL("../mcp/prompt-guide-widget.html", import.meta.url), "utf8"),
     readFile(new URL("mcp/prompt-guide-widget.html", pluginRoot), "utf8"),
     readFile(
-      new URL("../scripts/auto-navigation-stop-hook.mjs", import.meta.url),
+      new URL("../scripts/session-start-turncue.mjs", import.meta.url),
       "utf8",
     ),
     readFile(
-      new URL("scripts/auto-navigation-stop-hook.mjs", pluginRoot),
+      new URL("scripts/session-start-turncue.mjs", pluginRoot),
+      "utf8",
+    ),
+    readFile(
+      new URL("../scripts/turncue-observer.mjs", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("scripts/turncue-observer.mjs", pluginRoot),
       "utf8",
     ),
     readFile(new URL("../README.md", import.meta.url), "utf8"),
@@ -93,7 +105,8 @@ test("plugin build keeps Widget and Hook synchronized", async () => {
   const inlineScript = sourceWidget.match(/<script>([\s\S]*?)<\/script>/)?.[1];
   assert.ok(inlineScript, "Widget must contain an inline script");
   assert.doesNotThrow(() => new Function(inlineScript));
-  assert.equal(pluginHook, sourceHook);
+  assert.equal(pluginSessionStart, sourceSessionStart);
+  assert.equal(pluginObserver, sourceObserver);
   assert.equal(pluginReadme, sourceReadme);
   assert.equal(pluginReadmeEnglish, sourceReadmeEnglish);
   assert.match(sourceReadme, /\[English\]\(\.\/README\.en\.md\)/);
@@ -127,7 +140,7 @@ test(
       stderr: "pipe",
     });
     const client = new Client({
-      name: "conversation-navigator-plugin-test",
+      name: "turncue-plugin-test",
       version: "1.0.0",
     });
 
@@ -138,6 +151,11 @@ test(
         ({ name }) => name === "show_next_steps",
       );
       assert.ok(showNextSteps);
+      assert.match(showNextSteps.description, /navigationTask/);
+      assert.match(showNextSteps.description, /in_progress/);
+      assert.match(showNextSteps.description, /继续原任务/);
+      assert.match(showNextSteps.description, /真正闭环/);
+      assert.match(showNextSteps.description, /等待用户输入或授权/);
       assert.deepEqual(showNextSteps.inputSchema.properties.language.enum, [
         "auto",
         "zh-CN",
@@ -150,6 +168,12 @@ test(
       assert.equal(resource.contents[0].mimeType, "text/html;profile=mcp-app");
       assert.match(resource.contents[0].text, /personalityPreference/);
       assert.match(resource.contents[0].text, /TurnCue/);
+      assert.match(resource.contents[0].text, /navigationTask/);
+      assert.match(resource.contents[0].text, /status:\s*"in_progress"/);
+      assert.match(
+        resource.contents[0].text,
+        /navigationTask\.version === version/,
+      );
 
       for (const uri of [
         "ui://prompt-guide/widget-v1.html",
@@ -181,7 +205,7 @@ test(
           {
             title: "Confirm compatibility",
             prompt:
-              "Review the current technical identifiers and confirm which names must remain conversation-navigator for installed plugins, hooks, MCP discovery, and existing automation to keep working.",
+              "Review the current technical identifiers and confirm that turncue is used consistently for plugin installation, hooks, MCP discovery, and repository documentation.",
             kind: "clarify",
           },
         ],

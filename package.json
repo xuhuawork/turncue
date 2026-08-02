@@ -1,18 +1,18 @@
 {
-  "name": "conversation-navigator",
-  "version": "0.2.0",
+  "name": "turncue",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
-  "description": "TurnCue: a bilingual Codex conversation navigation plugin with an MCP App Widget and Stop Hook.",
+  "description": "TurnCue: a bilingual Codex conversation navigation plugin with an MCP App Widget and a read-only session observer.",
   "license": "MIT",
-  "repository": "https://github.com/xuhuawork/conversation-navigator",
+  "repository": "https://github.com/xuhuawork/turncue",
   "engines": {
     "node": ">=22.13.0"
   },
   "scripts": {
     "build": "npm run build:plugin",
-    "build:plugin": "node scripts/build-conversation-navigator-plugin.mjs",
-    "lint": "node --check mcp/local-server.mjs && node --check scripts/auto-navigation-stop-hook.mjs && node --check scripts/build-conversation-navigator-plugin.mjs",
+    "build:plugin": "node scripts/build-turncue-plugin.mjs",
+    "lint": "node --check mcp/local-server.mjs && node --check scripts/session-start-turncue.mjs && node --check scripts/turncue-observer.mjs && node --check scripts/build-turncue-plugin.mjs",
     "test": "npm run build:plugin && node --test tests/*.test.mjs",
     "validate": "npm run lint && npm test"
   },

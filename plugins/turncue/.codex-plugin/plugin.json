@@ -1,13 +1,13 @@
 {
-  "name": "conversation-navigator",
-  "version": "0.2.0",
-  "description": "TurnCue 在每轮回答后提供可编辑的中英文下一步建议。 TurnCue adds editable Chinese or English next-step suggestions after each response.",
+  "name": "turncue",
+  "version": "0.4.0",
+  "description": "TurnCue 按需提供可编辑的中英文下一步建议，并以安全模式保护原任务。 TurnCue provides editable Chinese or English next-step suggestions on demand while safe mode protects the active task.",
   "author": {
     "name": "xuhuawork",
     "url": "https://github.com/xuhuawork"
   },
-  "homepage": "https://github.com/xuhuawork/conversation-navigator#readme",
-  "repository": "https://github.com/xuhuawork/conversation-navigator",
+  "homepage": "https://github.com/xuhuawork/turncue#readme",
+  "repository": "https://github.com/xuhuawork/turncue",
   "license": "MIT",
   "keywords": [
     "conversation",
@@ -20,7 +20,7 @@
   "interface": {
     "displayName": "TurnCue",
     "shortDescription": "可编辑的下一步建议 / Editable next-step prompts",
-    "longDescription": "TurnCue 在回答完成后自动追加下一步卡片。支持自动、中文和 English 三种语言设置，创意脑暴、理性推演和感性共鸣三种人格，以及每轮 3–5 个可编辑方向。 TurnCue adds a next-step card after each completed response, with Auto, Chinese, or English language modes, three navigation personalities, and 3–5 editable suggestions.",
+    "longDescription": "TurnCue 通过模型判断或手动请求显示下一步卡片，并使用只读 SessionStart observer，避免阻断式 Stop 续写打断原任务。支持自动、中文和 English 三种语言、三种人格及每轮 3–5 个可编辑方向。 TurnCue displays next-step cards through model-driven or manual requests and uses a read-only SessionStart observer so no blocking Stop continuation interrupts the active task.",
     "developerName": "xuhuawork",
     "category": "Productivity",
     "capabilities": [
@@ -36,6 +36,6 @@
     "composerIcon": "./assets/icon.svg",
     "logo": "./assets/logo.svg",
     "logoDark": "./assets/logo-dark.svg",
-    "websiteURL": "https://github.com/xuhuawork/conversation-navigator"
+    "websiteURL": "https://github.com/xuhuawork/turncue"
   }
 }

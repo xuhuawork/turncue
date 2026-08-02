@@ -19,7 +19,7 @@ const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
 const pluginRoot = path.join(
   repositoryRoot,
   "plugins",
-  "conversation-navigator",
+  "turncue",
 );
 const pluginMcpRoot = path.join(pluginRoot, "mcp");
 const pluginScriptsRoot = path.join(pluginRoot, "scripts");
@@ -78,11 +78,18 @@ await Promise.all([
     path.join(pluginMcpRoot, "prompt-guide-widget.html"),
   ),
   copyFile(
-    path.join(repositoryRoot, "scripts", "auto-navigation-stop-hook.mjs"),
-    path.join(pluginScriptsRoot, "auto-navigation-stop-hook.mjs"),
+    path.join(repositoryRoot, "scripts", "session-start-turncue.mjs"),
+    path.join(pluginScriptsRoot, "session-start-turncue.mjs"),
+  ),
+  copyFile(
+    path.join(repositoryRoot, "scripts", "turncue-observer.mjs"),
+    path.join(pluginScriptsRoot, "turncue-observer.mjs"),
   ),
 ]);
 
+await rm(path.join(pluginScriptsRoot, "auto-navigation-stop-hook.mjs"), {
+  force: true,
+});
 const result = spawnSync(
   esbuildPath,
   [
@@ -121,7 +128,7 @@ if (result.status !== 0) {
   await rm(bundledServerMetafilePath, { force: true });
   const { size } = await stat(bundledServerPath);
   process.stdout.write(
-    `Built conversation-navigator plugin MCP (${Math.ceil(size / 1024)} KiB).\n`,
+    `Built TurnCue plugin MCP (${Math.ceil(size / 1024)} KiB).\n`,
   );
 }
 

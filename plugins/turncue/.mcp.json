@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "conversation-navigator": {
+    "turncue": {
       "cwd": ".",
       "command": "node",
       "args": [
